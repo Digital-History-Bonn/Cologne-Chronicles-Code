@@ -7,12 +7,11 @@ def main():
 
     # Train the model
     results = model.train(data="data/YOLO_dataset/CGD.yaml",
-                          epochs=10,
+                          epochs=100,
                           imgsz=2048,
-                          batch=8)
+                          batch=16,
+                          device=[0, 1])
 
-    print(results)
-    
    
 if __name__ == '__main__':
     main()
