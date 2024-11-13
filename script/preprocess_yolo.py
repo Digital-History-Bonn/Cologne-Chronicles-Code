@@ -133,14 +133,15 @@ def read_xml(path: str):
             # Convert the points string to a list of (x, y) tuples
             points = [(int(x), int(y)) for x, y in (pair.split(",") for pair in points_str.split())]
             # Create a shapely Polygon from the points
-            polygon = Polygon(points)
-            polygons.append(polygon)
+            if len(points) > 2:
+                polygon = Polygon(points)
+                polygons.append(polygon)
 
-            # Extract the class information from the 'custom' attribute or region tag name
-            structure_type = custom.split("structure {type:")[1].split(";")[0]
+                # Extract the class information from the 'custom' attribute or region tag name
+                structure_type = custom.split("structure {type:")[1].split(";")[0]
 
-            # Append the extracted class (structure type) to the classes list
-            classes.append(LABEL_ASSIGNMENTS.get(structure_type, 0))
+                # Append the extracted class (structure type) to the classes list
+                classes.append(LABEL_ASSIGNMENTS.get(structure_type, 0))
 
     return polygons, classes, width, height
 
