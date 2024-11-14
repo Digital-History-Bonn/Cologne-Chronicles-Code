@@ -145,8 +145,7 @@ def predict(model: YOLO, images: List[str], targets: Optional[List[str]] = None)
         pred_cls = result.boxes.cls.int().cpu()
         # plot_target(result.orig_img, pred_cls, pred_bboxs, title="prediction")
 
-        print(f"{result.path}")
-        for threshold in [0.9]:
+        for threshold in [0.5]:
             tar_count, precision, recall, f1_score, precisions, recalls, f1_scores = metrics(pred_bboxs, tar_bboxs, pred_cls, tar_cls, threshold=threshold)
 
             counts += tar_count.bool()
@@ -157,17 +156,6 @@ def predict(model: YOLO, images: List[str], targets: Optional[List[str]] = None)
             avg_recall += recall
             avg_precision += precision
             avg_f1 += f1_score
-
-            # print(f"{threshold=}")
-            # print(f"\t{precision=}")
-            # print(f"\t{recall=}")
-            # print(f"\t{f1_score=}")
-            # print(f"{tar_count=}")
-            # print(f"\t{precisions=}")
-            # print(f"\t{recalls=}")
-            # print(f"\t{f1_scores=}")
-            # print()
-        # print("\n\n")
 
     print(f"Overall:")
     print(f"\trecall:{avg_recall / counts.sum():.4f}")
