@@ -158,9 +158,9 @@ def predict(model: YOLO, images: List[str], targets: Optional[List[str]] = None)
             avg_f1 += f1_score
 
     print(f"Overall:")
-    print(f"\trecall:{avg_recall / counts.sum():.4f}")
-    print(f"\tprecision:{avg_precision / counts.sum():.4f}")
-    print(f"\tf1 score:{avg_f1 / counts.sum():.4f}\n"),
+    print(f"\trecall:{avg_recall / len(targets):.4f}")
+    print(f"\tprecision:{avg_precision / len(targets):.4f}")
+    print(f"\tf1 score:{avg_f1 / len(targets):.4f}\n"),
 
     for idx, (r, p, f) in enumerate(zip(avg_recalls / counts, avg_precisions / counts, avg_f1s / counts)):
         print(f"{CLASS_ASSIGNMENTS[idx]}:")
