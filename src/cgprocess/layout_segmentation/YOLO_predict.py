@@ -141,8 +141,8 @@ def predict(model: YOLO, images: List[str], targets: Optional[List[str]] = None)
         tar_cls, tar_bboxs = read_txt(target, shape)
         # plot_target(result.orig_img, tar_cls, tar_bboxs, title="target")
 
-        pred_bboxs = result.boxes.xyxy  # Boxes object for bounding box outputs
-        pred_cls = result.boxes.cls.int()
+        pred_bboxs = result.boxes.xyxy.cpu()  # Boxes object for bounding box outputs
+        pred_cls = result.boxes.cls.int().cpu()
         # plot_target(result.orig_img, pred_cls, pred_bboxs, title="prediction")
 
         print(f"{result.path}")
