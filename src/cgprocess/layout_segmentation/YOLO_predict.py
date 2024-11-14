@@ -185,7 +185,7 @@ def predict(model: YOLO, images: List[str], targets: Optional[List[str]] = None)
 def main(image_path: str, target_path: Optional[str] = None):
     # load model
     model = YOLO("models/yolov8_1.pt")
-    images = list(glob.glob(f"{image_path}/*.jpg"))[:6]
+    images = list(glob.glob(f"{image_path}/*.jpg"))
     
     target = [f"{target_path}/{basename(file)[:-4]}.txt" for file in images] if target_path else None
     
