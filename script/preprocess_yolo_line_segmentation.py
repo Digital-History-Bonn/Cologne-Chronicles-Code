@@ -2,7 +2,7 @@ import glob
 import json
 import os
 from os.path import basename
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import yaml
@@ -87,10 +87,10 @@ def read_xml(path: str):
         custom = region.get("custom", "")
         if coords and 'structure' in custom:
             # Convert the points string to a list of (x, y) tuples
-            points = [(int(x), int(y)) for x, y in
+            region_points = [(int(x), int(y)) for x, y in
                       (pair.split(",") for pair in coords['points'].split())]
             # Create a shapely Polygon from the points
-            if len(points) > 2:
+            if len(region_points) > 2:
                 # get lines
                 article_lines = []
                 for line in region.find_all("TextLine"):
@@ -103,7 +103,7 @@ def read_xml(path: str):
 
                 if len(article_lines) > 0:
                     page_lines.append(article_lines)
-                    polygons.append(Polygon(points))
+                    polygons.append(Polygon(region_points))
 
     return polygons, page_lines
 
@@ -116,13 +116,13 @@ def save_crop(image: np.ndarray, segment: Polygon, path: str) -> np.ndarray:
     return np.array([minx, miny, maxx, maxy])
 
 
-def save_target(article_lines: List[Polygon], bbox: Tuple[int, int, int, int], path: str):
-    shift = np.array([bbox[0], bbox[1]])
+def save_target(article_lines: List[Polygon], bbox: np.ndarray, path: str):
+    shift = bbox[:2]
     factor = np.array([bbox[2] - bbox[0], bbox[3] - bbox[1]])
     with open(path, "w", encoding="utf-8") as file:
         for line in article_lines:
             coords = (line.exterior.coords[:-1] - shift) / factor
-            coord_str = " ".join(f"{x} {y}" for x, y in coords)
+            coord_str = " ".join(f"{max(min(x, 0), bbox[2] - bbox[0])} {max(min(y, 0), bbox[3] - bbox[1])}" for x, y in coords)
             file.write(f"0 {coord_str}\n")
 
 
@@ -178,7 +178,10 @@ def main(image_path: str, xml_path: str, output_path: str, split_file: str):
 
 
 if __name__ == '__main__':
-    main(image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
-         xml_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
-         output_path="data/YOLO_Textlines",
-         split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json")
+    # main(image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
+    #      xml_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
+    #      output_path="data/YOLO_Textlines",
+    #      split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json")
+
+    plot_segments("data/YOLO_Textlines/train/labels/Koelnische_Zeitung_1866-06_1866-09_0073_7.txt",
+                  "data/YOLO_Textlines/train/images/Koelnische_Zeitung_1866-06_1866-09_0073_7.jpg")
