@@ -12,29 +12,26 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 LABEL_ASSIGNMENTS = {
-    "TextLine": 0,
-    "advertisement": 0,
-    "UnknownRegion": 0,
-    "image": 6,
-    "Image": 6,
-    "inverted_text": 7,
-    "caption": 1,
-    "table": 2,
-    "article": 3,
-    "article_": 3,
-    "paragraph": 3,
-    "heading": 4,
-    "header": 5
+    "caption": 0,
+    "table": 1,
+    "article": 2,
+    "article_": 2,
+    "paragraph": 2,
+    "heading": 3,
+    "header": 4,
+    "image": 5,
+    "Image": 5,
+    "inverted_text": 6
 }
 
 CLASS_ASSIGNMENTS = {
-    1: "caption",
-    2: "table",
-    3: "article",
-    4: "heading",
-    5: "header",
-    6: "image",
-    7 : "inverted_text"
+    0: "caption",
+    1: "table",
+    2: "article",
+    3: "heading",
+    4: "header",
+    5: "image",
+    6 : "inverted_text"
 }
 colors = ['tab:blue', 'tab:orange', 'tab:green',
           'tab:red', 'tab:purple', 'tab:pink',
