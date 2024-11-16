@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from matplotlib import patches
 from shapely.geometry import Polygon
 from skimage.io import imread, imsave
+from tqdm import tqdm
 
 
 def plot_segments(target_path, image_path):
@@ -155,10 +156,9 @@ def main(image_path: str, xml_path: str, output_path: str, split_file: str):
     split_dict = {value: key for key, values in data.items() for value in values}
 
     # create image_crops and target txt files
-    for target, image in zip(targets, images):
+    for target, image in tqdm(zip(targets, images), desc="Preprocessing data", total=len(images)):
         split = split_dict[basename(target)[:-4]]
         create(target, image, f"{output_path}/{split}")
-        exit()
 
 
 if __name__ == '__main__':
