@@ -35,8 +35,7 @@ def main():
                 epochs=500 if args.task == 'detect' else 200,
                 imgsz=imgz,
                 batch=8 * len(devices) if torch.cuda.is_available() else 8,
-                device=devices,
-                seed=args.seed)
+                device=devices)
 
 
 def get_args() -> argparse.Namespace:
