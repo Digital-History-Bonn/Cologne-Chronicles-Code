@@ -5,6 +5,7 @@ from os.path import basename
 from typing import List, Tuple
 
 import numpy as np
+import yaml
 from bs4 import BeautifulSoup
 from matplotlib import pyplot as plt
 from matplotlib import patches
@@ -122,7 +123,7 @@ def save_target(article_lines: List[Polygon], bbox: Tuple[int, int, int, int], p
         for line in article_lines:
             coords = (line.exterior.coords[:-1] - shift) / factor
             coord_str = " ".join(f"{x} {y}" for x, y in coords)
-            file.write(f"1 {coord_str}\n")
+            file.write(f"0 {coord_str}\n")
 
 
 def create(target, image, output_path):
@@ -135,8 +136,13 @@ def create(target, image, output_path):
     for i, (segment, article_lines) in enumerate(zip(segments, page_lines)):
         if not os.path.exists(f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg"):
             # create crop
-            bbox = save_crop(image, segment,
-                             f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
+            try:
+                bbox = save_crop(image, segment,
+                                 f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
+            except Exception as e:
+                print(e)
+                print(segment.bounds)
+                raise e
 
             # create target .txt file
             save_target(article_lines, bbox, f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
@@ -160,6 +166,19 @@ def main(image_path: str, xml_path: str, output_path: str, split_file: str):
     for target, image in tqdm(zip(targets, images), desc="Preprocessing data", total=len(images)):
         split = split_dict[basename(target)[:-4]]
         create(target, image, f"{output_path}/{split}")
+
+    # create .yaml-file
+    # Create the base dictionary structure
+    dataset_config = {
+        'path': output_path,
+        'train': "train/images",
+        'val': "val/images",
+        'names': {0: 'Textline'}
+    }
+
+    # Write the data to a YAML file
+    with open(f"{output_path}/CGD.yaml", 'w') as file:
+        yaml.dump(dataset_config, file, default_flow_style=False)
 
 
 if __name__ == '__main__':
