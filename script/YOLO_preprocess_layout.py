@@ -126,15 +126,13 @@ def read_xml(path: str):
             points_str = coords['points']
             # Convert the points string to a list of (x, y) tuples
             points = [(int(x), int(y)) for x, y in (pair.split(",") for pair in points_str.split())]
+
+            # Extract the class information from the 'custom' attribute or region tag name
+            structure_type = custom.split("structure {type:")[1].split(";")[0]
+
             # Create a shapely Polygon from the points
-            if len(points) > 2:
-                polygon = Polygon(points)
-                polygons.append(polygon)
-
-                # Extract the class information from the 'custom' attribute or region tag name
-                structure_type = custom.split("structure {type:")[1].split(";")[0]
-
-                # Append the extracted class (structure type) to the classes list
+            if len(points) > 2 and structure_type in CLASS_ASSIGNMENTS.keys():
+                polygons.append(Polygon(points))
                 classes.append(LABEL_ASSIGNMENTS[structure_type])
 
     return polygons, classes, width, height
@@ -227,7 +225,3 @@ if __name__ == '__main__':
          image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
          split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json",
          output_path="data/YOLO_Layout")
-
-    # convertion(
-    #     "data/Chronicling-Germany-Dataset-main-data/data/annotations/Koelnische_Zeitung_1866-06_1866-09_0071.xml",
-    #     "data/Chronicling-Germany-Dataset-main-data/data/images/Koelnische_Zeitung_1866-06_1866-09_0071.jpg")
