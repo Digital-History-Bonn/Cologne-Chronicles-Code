@@ -141,6 +141,7 @@ def create(target, image, output_path):
                                  f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
             except Exception as e:
                 print(e)
+                print(target)
                 print(segment.bounds)
                 raise e
 
