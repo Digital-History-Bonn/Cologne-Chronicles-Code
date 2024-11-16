@@ -131,7 +131,7 @@ def read_xml(path: str):
             structure_type = custom.split("structure {type:")[1].split(";")[0]
 
             # Create a shapely Polygon from the points
-            if len(points) > 2 and structure_type in CLASS_ASSIGNMENTS.keys():
+            if len(points) > 2 and structure_type in LABEL_ASSIGNMENTS.keys():
                 polygons.append(Polygon(points))
                 classes.append(LABEL_ASSIGNMENTS[structure_type])
 
