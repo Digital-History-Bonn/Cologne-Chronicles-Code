@@ -122,7 +122,7 @@ def save_target(article_lines: List[Polygon], bbox: np.ndarray, path: str):
     with open(path, "w", encoding="utf-8") as file:
         for line in article_lines:
             coords = (line.exterior.coords[:-1] - shift) / factor
-            coord_str = " ".join(f"{max(min(x, 0), bbox[2] - bbox[0])} {max(min(y, 0), bbox[3] - bbox[1])}" for x, y in coords)
+            coord_str = " ".join(f"{min(max(x, 0.0), 1.0)} {min(max(y, 0.0), 1.0)}" for x, y in coords)
             file.write(f"0 {coord_str}\n")
 
 
