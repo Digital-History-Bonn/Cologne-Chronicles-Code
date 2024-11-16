@@ -133,12 +133,13 @@ def create(target, image, output_path):
     image = imread(image)
 
     for i, (segment, article_lines) in enumerate(zip(segments, page_lines)):
-        # create crop
-        bbox = save_crop(image, segment,
-                         f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
+        if not os.path.exists(f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg"):
+            # create crop
+            bbox = save_crop(image, segment,
+                             f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
 
-        # create target .txt file
-        save_target(article_lines, bbox, f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
+            # create target .txt file
+            save_target(article_lines, bbox, f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
 
 
 def main(image_path: str, xml_path: str, output_path: str, split_file: str):
