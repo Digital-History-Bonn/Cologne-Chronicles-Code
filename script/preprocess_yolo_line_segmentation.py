@@ -91,8 +91,6 @@ def read_xml(path: str):
                       (pair.split(",") for pair in coords['points'].split())]
             # Create a shapely Polygon from the points
             if len(points) > 2:
-                polygons.append(Polygon(points))
-
                 # get lines
                 article_lines = []
                 for line in region.find_all("TextLine"):
@@ -103,7 +101,9 @@ def read_xml(path: str):
                     if len(points) > 2:
                         article_lines.append(Polygon(points))
 
-                page_lines.append(article_lines)
+                if len(article_lines) > 0:
+                    page_lines.append(article_lines)
+                    polygons.append(Polygon(points))
 
     return polygons, page_lines
 
@@ -136,17 +136,12 @@ def create(target, image, output_path):
     for i, (segment, article_lines) in enumerate(zip(segments, page_lines)):
         if not os.path.exists(f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg"):
             # create crop
-            try:
-                bbox = save_crop(image, segment,
-                                 f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
-            except Exception as e:
-                print(e)
-                print(target)
-                print(segment.bounds)
-                raise e
+            bbox = save_crop(image, segment,
+                             f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
 
             # create target .txt file
-            save_target(article_lines, bbox, f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
+            save_target(article_lines, bbox,
+                        f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
 
 
 def main(image_path: str, xml_path: str, output_path: str, split_file: str):
