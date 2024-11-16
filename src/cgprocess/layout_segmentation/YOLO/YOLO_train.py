@@ -12,7 +12,7 @@ def main(task: str):
     model = YOLO(model_file)
 
     # Train the model
-    yaml = {"detect": "data/YOLO_dataset/CGD.yaml",
+    yaml = {"detect": "data/YOLO_Layout/CGD.yaml",
             "segment": "data/YOLO_Textlines/CGD.yaml",
             "pose": "data/YOLO_Baselines/CGD.yaml"}[task]
 
