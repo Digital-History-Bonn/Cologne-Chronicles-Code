@@ -15,32 +15,26 @@ LABEL_ASSIGNMENTS = {
     "TextLine": 0,
     "advertisement": 0,
     "UnknownRegion": 0,
-    "image": 8,
-    "Image": 8,
-    "inverted_text": 9,
+    "image": 6,
+    "Image": 6,
+    "inverted_text": 7,
     "caption": 1,
     "table": 2,
     "article": 3,
     "article_": 3,
     "paragraph": 3,
     "heading": 4,
-    "header": 5,
-    "separator_vertical": 6,
-    "separator_short": 7,
-    "separator_horizontal": 7,
+    "header": 5
 }
 
 CLASS_ASSIGNMENTS = {
-    0: "unknown",
     1: "caption",
     2: "table",
     3: "article",
     4: "heading",
     5: "header",
-    6: "separator_vertical",
-    7: "separator_horizontal",
-    8: "image",
-    9 : "inverted_text"
+    6: "image",
+    7 : "inverted_text"
 }
 colors = ['tab:blue', 'tab:orange', 'tab:green',
           'tab:red', 'tab:purple', 'tab:pink',
@@ -124,7 +118,7 @@ def read_xml(path: str):
     classes = []
 
     # Loop through each relevant region tag
-    for region in soup.find_all(['TextRegion', 'TableRegion', 'SeparatorRegion']):
+    for region in soup.find_all(['TextRegion', 'TableRegion', 'GraphicRegion']):
         # Extract the points for the polygon
         coords = region.find("Coords")
         custom = region.get("custom", "")
@@ -141,7 +135,7 @@ def read_xml(path: str):
                 structure_type = custom.split("structure {type:")[1].split(";")[0]
 
                 # Append the extracted class (structure type) to the classes list
-                classes.append(LABEL_ASSIGNMENTS.get(structure_type, 0))
+                classes.append(LABEL_ASSIGNMENTS[structure_type])
 
     return polygons, classes, width, height
 
