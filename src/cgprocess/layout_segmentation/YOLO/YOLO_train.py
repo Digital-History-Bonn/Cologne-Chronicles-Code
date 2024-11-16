@@ -13,16 +13,20 @@ def main(task: str):
 
     # Train the model
     yaml = {"detect": "data/YOLO_dataset/CGD.yaml",
-                  "segment": "data/YOLO_Textlines/CGD.yaml",
-                  "pose": "data/YOLO_Baselines/CGD.yaml"}[task]
+            "segment": "data/YOLO_Textlines/CGD.yaml",
+            "pose": "data/YOLO_Baselines/CGD.yaml"}[task]
+
+    imgz = {"detect": 2048,
+            "segment": 1024,
+            "pose": 1024}[task]
 
     devices = list(range(torch.cuda.device_count())) if torch.cuda.is_available() else 'cpu'
 
-    results = model.train(data=yaml,
-                          epochs=500,
-                          imgsz=2048 if task == 'detect' else 1024,
-                          batch=16,
-                          device=devices)
+    model.train(data=yaml,
+                epochs=500 if task == 'detect' else 200,
+                imgsz=imgz,
+                batch=8 * len(devices) if torch.cuda.is_available() else 8,
+                device=devices)
 
 
 def get_args() -> argparse.Namespace:
@@ -44,7 +48,7 @@ def get_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-   
+
 if __name__ == '__main__':
     args = get_args()
     main(task=args.task)
