@@ -1,5 +1,6 @@
 import argparse
 
+import torch
 from ultralytics import YOLO
 
 
@@ -14,11 +15,14 @@ def main(task: str):
     yaml = {"detect": "data/YOLO_dataset/CGD.yaml",
                   "segment": "data/YOLO_Textlines/CGD.yaml",
                   "pose": "data/YOLO_Baselines/CGD.yaml"}[task]
+
+    devices = list(range(torch.cuda.device_count())) if torch.cuda.is_available() else 'cpu'
+
     results = model.train(data=yaml,
                           epochs=500,
                           imgsz=2048 if task == 'detect' else 1024,
                           batch=16,
-                          device=[0, 1])
+                          device=devices)
 
 
 def get_args() -> argparse.Namespace:
