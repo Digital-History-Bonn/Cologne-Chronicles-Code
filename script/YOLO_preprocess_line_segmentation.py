@@ -2,7 +2,7 @@ import glob
 import json
 import os
 from os.path import basename
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import yaml
@@ -59,7 +59,7 @@ def plot_segments(target_path, image_path):
     plt.show()
 
 
-def read_xml(path: str):
+def read_xml(path: str) -> Tuple[List[Polygon], List[List[Polygon]]]:
     """
     Reads out polygon information and classes from xml file.
 

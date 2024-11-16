@@ -2,6 +2,7 @@ import glob
 import json
 import os
 from os.path import basename
+from typing import List, Tuple
 
 import numpy as np
 import yaml
@@ -11,7 +12,7 @@ from shapely.geometry import Polygon, LineString
 from skimage.io import imread
 from tqdm import tqdm
 
-from script.YOLO_preprocess_line_segmentation import save_crop, save_target
+from script.YOLO_preprocess_line_segmentation import save_crop
 
 
 def plot_segments(target_path, image_path):
@@ -51,7 +52,7 @@ def plot_segments(target_path, image_path):
     plt.show()
 
 
-def read_xml(path: str):
+def read_xml(path: str) -> Tuple[List[Polygon], List[List[LineString]]]:
     """
     Reads out polygon information and classes from xml file.
 
@@ -86,9 +87,8 @@ def read_xml(path: str):
                 # get lines
                 article_lines = []
                 for line in region.find_all("Baseline"):
-                    coords = line.find("points")
                     points = [(int(x), int(y)) for x, y in
-                              (pair.split(",") for pair in coords['points'].split())]
+                              (pair.split(",") for pair in line['points'].split())]
 
                     if len(points) > 2:
                         article_lines.append(LineString(points))
@@ -98,6 +98,16 @@ def read_xml(path: str):
                     polygons.append(Polygon(region_points))
 
     return polygons, page_lines
+
+
+def save_target(article_lines: List[LineString], bbox: np.ndarray, path: str):
+    shift = bbox[:2]
+    factor = np.array([bbox[2] - bbox[0], bbox[3] - bbox[1]])
+    with open(path, "w", encoding="utf-8") as file:
+        for line in article_lines:
+            coords = (line.coords[:-1] - shift) / factor
+            coord_str = " ".join(f"{min(max(x, 0.0), 1.0)} {min(max(y, 0.0), 1.0)}" for x, y in coords)
+            file.write(f"0 {coord_str}\n")
 
 
 def create(target, image, output_path):
