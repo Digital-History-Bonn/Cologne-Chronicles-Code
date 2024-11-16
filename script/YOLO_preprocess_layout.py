@@ -222,16 +222,11 @@ def main(annotation_path, image_path, split_file, output_path):
         yaml.dump(dataset_config, file, default_flow_style=False)
 
 
-def convertion(annotation_path, image_path):
-    yolo_format = xml_to_yolo(annotation_path)
-    plot_yolo_boxes(yolo_format, image_path)
-
-
 if __name__ == '__main__':
     main(annotation_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
          image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
          split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json",
-         output_path="data/YOLO_dataset")
+         output_path="data/YOLO_Layout")
 
     # convertion(
     #     "data/Chronicling-Germany-Dataset-main-data/data/annotations/Koelnische_Zeitung_1866-06_1866-09_0071.xml",
