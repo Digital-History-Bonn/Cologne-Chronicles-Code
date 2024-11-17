@@ -110,8 +110,11 @@ List[List[Tuple[float, float, float, float]]]]:
                 article_lines = []
                 line_segmenents = []
                 for line in region.find_all("TextLine"):
-                    segment_coords = line.find("Coords")["points"]
-                    baseline_coords = line.find("Baseline")["points"]
+                    try:
+                        segment_coords = line.find("Coords")["points"]
+                        baseline_coords = line.find("Baseline")["points"]
+                    except TypeError:
+                        continue
 
                     points = [(int(x), int(y)) for x, y in
                               (pair.split(",") for pair in baseline_coords.split())]
