@@ -25,7 +25,7 @@ def predict(model: YOLO, images: List[str], output_paths: List[str], device: str
     # Predict with the model
     results = model.predict(images, device=device)
 
-    if output_paths[0][-4] == "json":
+    if output_paths[0][-4:] == "json":
         write_jsons(output_paths, results)
     else:
         write_xmls(output_paths, results)
