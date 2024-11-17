@@ -114,7 +114,7 @@ def main(image_path: str, output_path: str, model: str, file_format: str = "json
     model = YOLO(f"models/{model}.pt")
 
     # create list of images
-    images = list(glob.glob(f"{image_path}/*.jpg"))[:6]
+    images = list(glob.glob(f"{image_path}/*.jpg"))
 
     # create folder for output and create list of paths
     os.makedirs(output_path, exist_ok=True)
