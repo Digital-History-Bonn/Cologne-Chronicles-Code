@@ -194,6 +194,7 @@ def main(image_path: str, xml_path: str, output_path: str, split_file: str):
     # Create the base dictionary structure
     dataset_config = {
         'path': output_path,
+        'kpt_shape': [N, 2],
         'train': "train/images",
         'val': "val/images",
         'names': {0: 'Textline'}
