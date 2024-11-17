@@ -1,3 +1,4 @@
+import argparse
 import glob
 import json
 import os
@@ -37,7 +38,8 @@ def write_xmls(output_paths, results: List[Results]):
     :param result: result object from YOLO prediction
     """
     # read template
-    with open("src/cgprocess/layout_segmentation/templates/annotation_file.xml", 'r', encoding="utf-8") as f:
+    with open("src/cgprocess/layout_segmentation/templates/annotation_file.xml", 'r',
+              encoding="utf-8") as f:
         template = f.read()
 
     for output_path, result in zip(output_paths, results):
@@ -106,9 +108,9 @@ def write_jsons(output_paths, results):
             json.dump(data, f, indent=4)
 
 
-def main(image_path: str, output_path: str, file_format: str = "json"):
+def main(image_path: str, output_path: str, model: str, file_format: str = "json"):
     # load model
-    model = YOLO("models/YOLO_detect_2.pt")
+    model = YOLO(f"models/{model}.pt")
 
     # create list of images
     images = list(glob.glob(f"{image_path}/*.jpg"))[:6]
@@ -121,7 +123,50 @@ def main(image_path: str, output_path: str, file_format: str = "json"):
     predict(model, images, output_paths)
 
 
+def get_args() -> argparse.Namespace:
+    """
+    Defines arguments.
+
+    Returns:
+        Namespace with parsed arguments.
+    """
+    parser = argparse.ArgumentParser(description="predict")
+    # pylint: disable=duplicate-code
+    parser.add_argument(
+        "--images",
+        "-i",
+        type=str,
+        default="data/YOLO_dataset/test/images",
+        help="path the the images to predict"
+    )
+
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default="predictions/layout/YOLO/page",
+        help="Number of epochs to train."
+    )
+
+    parser.add_argument(
+        "--model",
+        "-m",
+        type=str,
+        default="YOLO_detect_2",
+        help="Name of the model to use for prediction."
+    )
+
+    parser.add_argument(
+        "--format",
+        "-f",
+        type=str,
+        default="xml",
+        help="Format to save the prediction in (json or xml)."
+    )
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    image_path = "data/YOLO_dataset/test/images"
-    output_path = "predictions/layout/YOLO/example/page"
-    main(image_path, output_path, 'xml')
+    args = get_args()
+    main(args.images, args.output, args.model, args.format)
