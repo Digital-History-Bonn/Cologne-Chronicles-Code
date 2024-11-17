@@ -202,10 +202,10 @@ def main(image_path: str, xml_path: str, output_path: str, split_file: str):
 
 
 if __name__ == '__main__':
-    # main(image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
-    #      xml_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
-    #      output_path="data/YOLO_Baselines",
-    #      split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json")
+    main(image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
+         xml_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
+         output_path="data/YOLO_Baselines",
+         split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json")
 
-    plot_segments("data/YOLO_Baselines/train/labels/Koelnische_Zeitung_1866-06_1866-09_0110_0.txt",
-                  "data/YOLO_Textlines/train/images/Koelnische_Zeitung_1866-06_1866-09_0110_0.jpg")
+    # plot_segments("data/YOLO_Baselines/train/labels/Koelnische_Zeitung_1866-06_1866-09_0110_0.txt",
+    #               "data/YOLO_Textlines/train/images/Koelnische_Zeitung_1866-06_1866-09_0110_0.jpg")
