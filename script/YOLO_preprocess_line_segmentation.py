@@ -59,7 +59,7 @@ def plot_segments(target_path, image_path):
     plt.show()
 
 
-def read_xml(path: str) -> Tuple[List[Polygon], List[List[Polygon]]]:
+def read_xml(path: str) -> Tuple[List[Tuple[float, float, float, float]], List[List[Polygon]]]:
     """
     Reads out polygon information and classes from xml file.
 
@@ -103,17 +103,15 @@ def read_xml(path: str) -> Tuple[List[Polygon], List[List[Polygon]]]:
 
                 if len(article_lines) > 0:
                     page_lines.append(article_lines)
-                    polygons.append(Polygon(region_points))
+                    polygons.append(Polygon(region_points).bounds)
 
     return polygons, page_lines
 
 
-def save_crop(image: np.ndarray, segment: Polygon, path: str) -> np.ndarray:
-    minx, miny, maxx, maxy = segment.bounds
+def save_crop(image: np.ndarray, segment: Tuple[float, float, float, float], path: str) -> np.ndarray:
+    minx, miny, maxx, maxy = segment
     crop = image[int(miny):int(maxy), int(minx):int(maxx)]
     imsave(path, crop)
-
-    return np.array([minx, miny, maxx, maxy])
 
 
 def save_target(article_lines: List[Polygon], bbox: np.ndarray, path: str):
@@ -136,11 +134,10 @@ def create(target, image, output_path):
     for i, (segment, article_lines) in enumerate(zip(segments, page_lines)):
         if not os.path.exists(f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg"):
             # create crop
-            bbox = save_crop(image, segment,
-                             f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
+            save_crop(image, segment, f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
 
             # create target .txt file
-            save_target(article_lines, bbox,
+            save_target(article_lines, np.array(segment),
                         f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
 
 

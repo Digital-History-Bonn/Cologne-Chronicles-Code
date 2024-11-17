@@ -7,12 +7,22 @@ from typing import List, Tuple
 import numpy as np
 import yaml
 from bs4 import BeautifulSoup
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, patches
 from shapely.geometry import Polygon, LineString
 from skimage.io import imread
 from tqdm import tqdm
 
 from script.YOLO_preprocess_line_segmentation import save_crop
+
+N = 6
+
+
+def xyxy2xywh(bbox: Tuple[float, float, float, float]):
+    x = bbox[0] + (bbox[2] - bbox[0]) / 2
+    y = bbox[1] + (bbox[3] - bbox[1]) / 2
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
+    return x, y, w, h
 
 
 def plot_segments(target_path, image_path):
@@ -42,17 +52,28 @@ def plot_segments(target_path, image_path):
     # Parse the segment data
     for line in segment_data:
         parts = line.strip().split()
-        coords = list(map(float, parts[1:]))
+        bbox = list(map(float, parts[1:5]))
+        coords = list(map(float, parts[5:]))
         points = np.array([(coords[i] * img_width, coords[i + 1] * img_height) for i in
-                  range(0, len(coords), 2)])
+                           range(0, len(coords), 2)])
 
-        ax.plot(points[:, 0], points[:, 1])
+        ax.plot(points[:, 0], points[:, 1], color='red', linewidth=1)
+
+        width = bbox[2] * img_width
+        height = bbox[3] * img_height
+        x_bottom_left = (bbox[0] * img_width) - width / 2
+        y_bottom_left = (bbox[1] * img_height) - height / 2
+
+        ax.add_patch(patches.Rectangle((x_bottom_left, y_bottom_left), width, height,
+                                       edgecolor='blue', facecolor='none', linewidth=1))
 
     plt.axis('off')
     plt.show()
 
 
-def read_xml(path: str) -> Tuple[List[Polygon], List[List[LineString]]]:
+def read_xml(path: str) -> Tuple[List[Tuple[float, float, float, float]],
+List[List[LineString]],
+List[List[Tuple[float, float, float, float]]]]:
     """
     Reads out polygon information and classes from xml file.
 
@@ -72,59 +93,78 @@ def read_xml(path: str) -> Tuple[List[Polygon], List[List[LineString]]]:
 
     polygons = []
     page_lines = []
+    page_segments = []
 
     # Loop through each relevant region tag
     for region in soup.find_all('TextRegion'):
         # Extract the points for the polygon
-        coords = region.find("Coords")
+        region_coords = region.find("Coords")
         custom = region.get("custom", "")
-        if coords and 'structure' in custom:
+        if region_coords and 'structure' in custom:
             # Convert the points string to a list of (x, y) tuples
             region_points = [(int(x), int(y)) for x, y in
-                      (pair.split(",") for pair in coords['points'].split())]
+                             (pair.split(",") for pair in region_coords['points'].split())]
             # Create a shapely Polygon from the points
             if len(region_points) > 2:
                 # get lines
                 article_lines = []
-                for line in region.find_all("Baseline"):
+                line_segmenents = []
+                for line in region.find_all("TextLine"):
+                    segment_coords = line.find("Coords")["points"]
+                    baseline_coords = line.find("Baseline")["points"]
+
                     points = [(int(x), int(y)) for x, y in
-                              (pair.split(",") for pair in line['points'].split())]
+                              (pair.split(",") for pair in baseline_coords.split())]
 
                     if len(points) > 2:
                         article_lines.append(LineString(points))
+                        line_segmenents.append(Polygon([(int(x), int(y)) for x, y in
+                                                        (pair.split(",") for pair in
+                                                         segment_coords.split())]).bounds)
 
                 if len(article_lines) > 0:
+                    polygons.append(Polygon(region_points).bounds)
                     page_lines.append(article_lines)
-                    polygons.append(Polygon(region_points))
+                    page_segments.append(line_segmenents)
 
-    return polygons, page_lines
+    return polygons, page_lines, page_segments
 
 
-def save_target(article_lines: List[LineString], bbox: np.ndarray, path: str):
+def save_target(line_segmenents: List[Tuple[float, float, float, float]],
+                article_lines: List[LineString],
+                bbox: np.ndarray, path: str):
     shift = bbox[:2]
     factor = np.array([bbox[2] - bbox[0], bbox[3] - bbox[1]])
+
+    lines = []
+    for bbox, line in zip(line_segmenents, article_lines):
+        x_center, y_center, width, height = xyxy2xywh(bbox)
+        string = f"0 {(x_center - shift[0]) / factor[0]} {(y_center - shift[1]) / factor[1]} {width / factor[0]} {height / factor[1]}"
+        line_np = np.array(
+            [line.interpolate(float(i) / (N - 1), normalized=True).coords[0] for i in range(N)])
+        coords = ((line_np - shift) / factor).clip(0.0, 1.0)
+        string += " " + " ".join(f"{x} {y}" for x, y in coords) + "\n"
+        lines.append(string)
+
     with open(path, "w", encoding="utf-8") as file:
-        for line in article_lines:
-            coords = (line.coords[:-1] - shift) / factor
-            coord_str = " ".join(f"{min(max(x, 0.0), 1.0)} {min(max(y, 0.0), 1.0)}" for x, y in coords)
-            file.write(f"0 {coord_str}\n")
+        file.writelines(lines)
 
 
 def create(target, image, output_path):
     os.makedirs(f"{output_path}/images", exist_ok=True)
     os.makedirs(f"{output_path}/labels", exist_ok=True)
 
-    segments, page_lines = read_xml(target)
+    segments, page_lines, page_segments = read_xml(target)
     image = imread(image)
 
-    for i, (segment, article_lines) in enumerate(zip(segments, page_lines)):
+    for i, (segment, article_lines, line_segmenents) in enumerate(
+            zip(segments, page_lines, page_segments)):
         if not os.path.exists(f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg"):
             # create crop
-            bbox = save_crop(image, segment,
-                             f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
+            save_crop(image, segment, f"{output_path}/images/{basename(target)[:-4]}_{i}.jpg")
 
             # create target .txt file
-            save_target(article_lines, bbox,
+            save_target(line_segmenents, article_lines, np.array(segment),
                         f"{output_path}/labels/{basename(target)[:-4]}_{i}.txt")
 
 
@@ -162,10 +202,10 @@ def main(image_path: str, xml_path: str, output_path: str, split_file: str):
 
 
 if __name__ == '__main__':
-    main(image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
-         xml_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
-         output_path="data/YOLO_Baselines",
-         split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json")
+    # main(image_path="data/Chronicling-Germany-Dataset-main-data/data/images",
+    #      xml_path="data/Chronicling-Germany-Dataset-main-data/data/annotations",
+    #      output_path="data/YOLO_Baselines",
+    #      split_file="data/Chronicling-Germany-Dataset-main-data/data/split.json")
 
-    # plot_segments("data/YOLO_Textlines/train/labels/Koelnische_Zeitung_1866-06_1866-09_0073_7.txt",
-    #               "data/YOLO_Textlines/train/images/Koelnische_Zeitung_1866-06_1866-09_0073_7.jpg")
+    plot_segments("data/YOLO_Baselines/train/labels/Koelnische_Zeitung_1866-06_1866-09_0110_0.txt",
+                  "data/YOLO_Textlines/train/images/Koelnische_Zeitung_1866-06_1866-09_0110_0.jpg")
