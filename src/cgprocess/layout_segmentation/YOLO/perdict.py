@@ -21,9 +21,9 @@ REGION_TYPES = {
 }
 
 
-def predict(model: YOLO, images: List[str], output_paths: List[str], devices: Union[List[int], str]):
+def predict(model: YOLO, images: List[str], output_paths: List[str], device: str):
     # Predict with the model
-    results = model.predict(images, device=devices, batch=16)
+    results = model.predict(images, device=device)
 
     if output_paths[0][-4] == "json":
         write_jsons(output_paths, results)
@@ -121,15 +121,11 @@ def main(image_path: str, output_path: str, model: str, file_format: str = "json
     output_paths = [f"{output_path}/{basename(x)[:-4]}.{file_format}" for x in images]
 
     # get gpus
-    num_gpus = torch.cuda.device_count()
-    if num_gpus > 0:
-        print(f"Using {num_gpus} gpu device(s).")
-    else:
-        print("Using cpu.")
-    devices = list(range(num_gpus)) if torch.cuda.is_available() else 'cpu'
+    device = "cuda:0" if torch.cuda.is_available() else 'cpu'
+    print(f"using {device} for prediction")
 
     # predict
-    predict(model, images, output_paths, devices=devices)
+    predict(model, images, output_paths, device=device)
 
 
 def get_args() -> argparse.Namespace:
