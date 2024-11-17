@@ -34,6 +34,7 @@ def main():
     model.train(name=args.name,
                 data=yaml,
                 epochs=args.epochs,
+                patience=args.epochs,
                 imgsz=imgz,
                 batch=8 * len(devices) if torch.cuda.is_available() else 8,
                 device=devices,
