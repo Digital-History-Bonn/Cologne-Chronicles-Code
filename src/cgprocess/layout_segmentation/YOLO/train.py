@@ -25,7 +25,7 @@ def main():
             "segment": "data/YOLO_Textlines/CGD.yaml",
             "pose": "data/YOLO_Baselines/CGD.yaml"}[args.task]
 
-    imgz = {"detect": 2048,
+    imgz = {"detect": 640,
             "segment": 1024,
             "pose": 1024}[args.task]
 
@@ -35,7 +35,9 @@ def main():
                 epochs=500 if args.task == 'detect' else 200,
                 imgsz=imgz,
                 batch=8 * len(devices) if torch.cuda.is_available() else 8,
-                device=devices)
+                device=devices,
+                # seed=args.seed,
+                cache=True)
 
 
 def get_args() -> argparse.Namespace:
