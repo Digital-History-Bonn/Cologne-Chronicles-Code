@@ -31,8 +31,9 @@ def main():
 
     devices = list(range(torch.cuda.device_count())) if torch.cuda.is_available() else 'cpu'
 
-    model.train(data=yaml,
-                epochs=500 if args.task == 'detect' else 200,
+    model.train(name=args.name,
+                data=yaml,
+                epochs=args.epochs,
                 imgsz=imgz,
                 batch=8 * len(devices) if torch.cuda.is_available() else 8,
                 device=devices,
@@ -58,11 +59,27 @@ def get_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--epochs",
+        "-e",
+        type=int,
+        default=500,
+        help="Number of epochs to train."
+    )
+
+    parser.add_argument(
         "--seed",
         "-s",
         type=int,
         default=0,
-        help="Seed for training. If seed is not set pretrained weights are used."
+        help="Seed for training. If seed is not set or 0 pretrained weights are used."
+    )
+
+    parser.add_argument(
+        "--name",
+        "-n",
+        type=str,
+        default=None,
+        help="Name of the trained model."
     )
 
     return parser.parse_args()
