@@ -3,8 +3,9 @@ import glob
 import json
 import os
 from os.path import basename, dirname
-from typing import List
+from typing import List, Union
 
+import torch
 from bs4 import BeautifulSoup
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
@@ -20,9 +21,9 @@ REGION_TYPES = {
 }
 
 
-def predict(model: YOLO, images: List[str], output_paths: List[str]):
+def predict(model: YOLO, images: List[str], output_paths: List[str], devices: Union[List[int], str]):
     # Predict with the model
-    results = model.predict(images)
+    results = model.predict(images, device=devices)
 
     if output_paths[0][-4] == "json":
         write_jsons(output_paths, results)
@@ -119,8 +120,16 @@ def main(image_path: str, output_path: str, model: str, file_format: str = "json
     os.makedirs(output_path, exist_ok=True)
     output_paths = [f"{output_path}/{basename(x)[:-4]}.{file_format}" for x in images]
 
+    # get gpus
+    num_gpus = torch.cuda.device_count()
+    if num_gpus > 0:
+        print(f"Using {num_gpus} gpu device(s).")
+    else:
+        print("Using cpu.")
+    devices = list(range(num_gpus)) if torch.cuda.is_available() else 'cpu'
+
     # predict
-    predict(model, images, output_paths)
+    predict(model, images, output_paths, devices=devices)
 
 
 def get_args() -> argparse.Namespace:
