@@ -23,7 +23,7 @@ REGION_TYPES = {
 
 def predict(model: YOLO, images: List[str], output_paths: List[str], devices: Union[List[int], str]):
     # Predict with the model
-    results = model.predict(images, device=devices)
+    results = model.predict(images, device=devices, batch=16)
 
     if output_paths[0][-4] == "json":
         write_jsons(output_paths, results)
