@@ -124,9 +124,9 @@ def suppression(bboxs, line, threshold):
 
 
 def predict(model: YOLO, image_path: str, layout_xml_path: str, output_file: str,
-            devices: List[int]) -> None:
+            device: str) -> None:
     crops, shifts = crop_layout(image_path, layout_xml_path)
-    results = model.predict(crops, device=devices, verbose=False)
+    results = model.predict(crops, device=device, verbose=False)
 
     # extract textlines form result
     page_textlines = []
@@ -170,14 +170,14 @@ def main() -> None:
     else:
         print("Using cpu.")
 
-    devices = list(range(num_gpus)) if torch.cuda.is_available() else 'cpu'
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     model = YOLO(f"models/{args.model}.pt", verbose=True)
 
     bar = tqdm(zip(image_paths, layout_xml_paths, output_paths),
                total=len(image_paths),
                desc="Predicting")
     for image_path, layout_path, output_path in bar:
-        predict(model, image_path, layout_path, output_path, devices=devices)
+        predict(model, image_path, layout_path, output_path, device=device)
 
 
 if __name__ == '__main__':
