@@ -6,16 +6,30 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
+from coremltools.converters.mil.backend.nn.op_mapping import threshold
 from shapely.geometry import Polygon, LineString
 from skimage.io import imread
 
 from bs4 import BeautifulSoup
+from torchvision.ops import box_area
+from torchvision.ops._utils import _upcast
 
 from tqdm import tqdm
 from ultralytics import YOLO
 
 from src.cgprocess.baseline_detection.utils import adjust_path, add_baselines
 from src.cgprocess.layout_segmentation.processing.read_xml import xml_polygon_to_polygon_list
+
+
+def box_inter(boxes1: torch.Tensor, boxes2: torch.Tensor) -> torch.Tensor:
+
+    lt = torch.max(boxes1[:, None, :2], boxes2[:, :2])  # [N,M,2]
+    rb = torch.min(boxes1[:, None, 2:], boxes2[:, 2:])  # [N,M,2]
+
+    wh = _upcast(rb - lt).clamp(min=0)  # [N,M,2]
+    inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
+
+    return inter
 
 
 def get_args() -> argparse.Namespace:
@@ -99,6 +113,16 @@ def crop_layout(image_path, layout_xml_path) -> Tuple[List[np.ndarray], List[np.
             [np.array([x_min, y_min]) for x_min, y_min, _, _ in rois])
 
 
+def suppression(bboxs, line, threshold):
+    bboxs = bboxs.xyxy
+    intersections = box_inter(bboxs, bboxs)
+    intersections = intersections.fill_diagonal_(0).amax(dim=0)
+    area = box_area(bboxs)
+
+    mask = (intersections / area) < threshold
+    return bboxs[mask], line[mask]
+
+
 def predict(model: YOLO, image_path: str, layout_xml_path: str, output_file: str,
             devices: List[int]) -> None:
     crops, shifts = crop_layout(image_path, layout_xml_path)
@@ -110,8 +134,9 @@ def predict(model: YOLO, image_path: str, layout_xml_path: str, output_file: str
     for result, shift in zip(results, shifts):
         textlines = []
         baselines = []
-        for bbox, line in zip(result.boxes.numpy(), result.keypoints.numpy()):
-            bbox = bbox.xyxy[0] + np.tile(shift, 2)
+        bboxs, lines = suppression(result.boxes, result.keypoints, threshold=.9)
+        for bbox, line in zip(bboxs.numpy(), lines.numpy()):
+            bbox = bbox + np.tile(shift, 2)
             textlines.append(Polygon([[bbox[0], bbox[1]],
                                       [bbox[2], bbox[1]],
                                       [bbox[2], bbox[3]],
@@ -146,7 +171,7 @@ def main() -> None:
         print("Using cpu.")
 
     devices = list(range(num_gpus)) if torch.cuda.is_available() else 'cpu'
-    model = YOLO("models/yolo_pose_best.pt", verbose=True)
+    model = YOLO(f"models/{args.model}.pt", verbose=True)
 
     bar = tqdm(zip(image_paths, layout_xml_paths, output_paths),
                total=len(image_paths),
