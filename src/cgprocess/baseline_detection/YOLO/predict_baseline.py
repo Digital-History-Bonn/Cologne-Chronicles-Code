@@ -99,7 +99,8 @@ def extract_layout(xml_path: str) -> List[List[int]]:
     text_regions = page.find_all(['TextRegion'])
     for region in text_regions:
         points = np.array(xml_polygon_to_polygon_list(region.Coords["points"]))
-        rois.append([int(x) for x in Polygon(points).bounds])
+        if len(points) > 2:
+            rois.append([int(x) for x in Polygon(points).bounds])
 
     return rois
 
