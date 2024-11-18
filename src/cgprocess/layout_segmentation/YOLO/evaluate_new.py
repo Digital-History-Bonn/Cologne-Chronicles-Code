@@ -21,7 +21,7 @@ EVAL_LABELS = ["table", "paragraph", "caption", "heading", "header"]
 MAPPING = {'article': 'paragraph',
            'inverted_text': 'paragraph',
            'paragraph': 'paragraph',
-           'capition': 'caption',
+           'caption': 'caption',
            'heading': 'heading',
            'header': 'header',
            'newspaper_header': 'header',
