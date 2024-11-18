@@ -112,14 +112,19 @@ def crop_layout(image_path, layout_xml_path) -> Tuple[List[np.ndarray], List[np.
             [np.array([x_min, y_min]) for x_min, y_min, _, _ in rois])
 
 
-def suppression(bboxs, line, threshold):
+def suppression(bboxs, lines, threshold):
     bboxs = bboxs.xyxy
+    lines = lines.xy
+    
+    if len(bboxs) == 0:
+        return bboxs, lines
+
     intersections = box_inter(bboxs, bboxs)
     intersections = intersections.fill_diagonal_(0).amax(dim=0)
     area = box_area(bboxs)
 
     mask = (intersections / area) < threshold
-    return bboxs[mask], line[mask]
+    return bboxs[mask], lines[mask]
 
 
 def predict(model: YOLO, image_path: str, layout_xml_path: str, output_file: str,
@@ -141,7 +146,7 @@ def predict(model: YOLO, image_path: str, layout_xml_path: str, output_file: str
                                       [bbox[2], bbox[1]],
                                       [bbox[2], bbox[3]],
                                       [bbox[0], bbox[3]]]))
-            baselines.append(LineString(line.xy[0] + shift))
+            baselines.append(LineString(line + shift))
 
         page_textlines.append(textlines)
         page_baselines.append(baselines)
