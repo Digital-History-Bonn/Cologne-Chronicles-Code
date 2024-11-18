@@ -6,7 +6,6 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
-from coremltools.converters.mil.backend.nn.op_mapping import threshold
 from shapely.geometry import Polygon, LineString
 from skimage.io import imread
 
@@ -132,6 +131,7 @@ def predict(model: YOLO, image_path: str, layout_xml_path: str, output_file: str
     page_textlines = []
     page_baselines = []
     for result, shift in zip(results, shifts):
+        result = result.cpu()
         textlines = []
         baselines = []
         bboxs, lines = suppression(result.boxes, result.keypoints, threshold=.9)
