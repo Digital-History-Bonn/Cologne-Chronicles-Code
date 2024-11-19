@@ -16,14 +16,16 @@ from tqdm import tqdm
 from src.cgprocess.layout_segmentation.utils import adjust_path
 
 # Labels to evaluate
-EVAL_LABELS = ["table", "paragraph", "caption", "heading", "header"]
+EVAL_LABELS = ["paragraph", "inverted_text", "table", "caption", "heading", "header", "image"]
 
 MAPPING = {'article': 'paragraph',
-           'inverted_text': 'paragraph',
+           'inverted_text': 'inverted_text',
            'paragraph': 'paragraph',
            'caption': 'caption',
            'heading': 'heading',
            'header': 'header',
+           'Image': 'image',
+           'image': 'image',
            'newspaper_header': 'header',
            'headline': 'heading',
            'table': 'table'}
@@ -120,10 +122,10 @@ def read_xml(file_path: str):
     region_coords = []
     region_labels = []
 
-    text_regions = page.find_all('TextRegion')
+    text_regions = page.find_all(['TextRegion', 'GraphicRegion'])
     for region in text_regions:
         coords = region.find_all('Coords')[0]
-        label = get_tag(region)
+        label = MAPPING.get(get_tag(region), "NoLabel")
         polygon = torch.tensor([tuple(map(int, point.split(','))) for
                                 point in coords['points'].split()])
 
@@ -164,10 +166,8 @@ def sort_polygons_and_labels(polygons, labels):
     if len(polygons) == 0:
         return [], []
 
-    order = ['paragraph', 'table', 'heading', 'header']
-
     # Create a dictionary to map each label to its index in the order list
-    order_index = {label: i for i, label in enumerate(order)}
+    order_index = {label: i for i, label in enumerate(EVAL_LABELS)}
 
     # Create a list of tuples containing (label, polygon) and sort it based on label's order index
     sorted_pairs = sorted(zip(labels, polygons),
@@ -204,6 +204,12 @@ def evaluate(target: str, prediction: str):
 
     pred_tensor = draw_image(pred_polygons, pred_labels, shape=(width, height)).flatten()
     tar_tensor = draw_image(tar_polygons, tar_labels, shape=(width, height)).flatten()
+
+    if 'inverted_text' in pred_labels:
+        print("inverted_text in predictions")
+
+    if 'inverted_text' in tar_labels:
+        print("inverted_text in targets")
 
     confusion_metric = MulticlassConfusionMatrix(num_classes=len(EVAL_LABELS) + 1).to(
         pred_tensor.device)
