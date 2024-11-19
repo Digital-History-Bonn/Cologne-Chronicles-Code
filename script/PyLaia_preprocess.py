@@ -77,38 +77,36 @@ def save_target(path: str, split: str, text: str, file_name: str):
 
 
 def save_crop(image, bbox, path):
-    minx, miny, maxx, maxy = bbox
-    crop = image[int(miny):int(maxy), int(minx):int(maxx)]
-    image_pil = Image.fromarray(crop)
+    try:
+        minx, miny, maxx, maxy = bbox
+        crop = image[int(miny):int(maxy), int(minx):int(maxx)]
+        image_pil = Image.fromarray(crop)
 
-    aspect_ratio = image_pil.width / image_pil.height
-    resized_crop = image_pil.resize((int(128 * aspect_ratio), 128), Image.Resampling.LANCZOS)
+        aspect_ratio = image_pil.width / image_pil.height
+        resized_crop = image_pil.resize((int(128 * aspect_ratio), 128), Image.Resampling.LANCZOS)
 
-    resized_crop.save(path)
+        resized_crop.save(path)
+        return True
+    except ValueError:
+        return False
 
 
 def create(annotation: str, image: str, output_path: str, split: str):
-    os.makedirs(f"{output_path}/images", exist_ok=True)
+    os.makedirs(f"{output_path}/images/{split}/", exist_ok=True)
 
     texts, segments = read_xml(annotation)
     image = imread(image)
 
     for i, (article_texts, line_segments) in enumerate(zip(texts, segments)):
         for j, (text, segment) in enumerate(zip(article_texts, line_segments)):
-
-            # check for to small segments
-            minx, miny, maxx, maxy = segment
-            if maxy - miny < 5 or maxx - minx < 5:
-                continue
-
             file_name = f"{basename(annotation)[:-4]}_seg{i}_line{j}"
 
             # save crop
-            os.makedirs(f"{output_path}/images/{split}/", exist_ok=True)
-            save_crop(image, segment, f"{output_path}/images/{split}/{file_name}.jpg")
+            successfull = save_crop(image, segment, f"{output_path}/images/{split}/{file_name}.jpg")
 
             # add line to files
-            save_target(output_path, split, text, file_name)
+            if successfull:
+                save_target(output_path, split, text, file_name)
 
 
 def main(image_path: str, xml_path: str, output_path: str, split_file: str):
