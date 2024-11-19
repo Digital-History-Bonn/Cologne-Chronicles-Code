@@ -95,6 +95,12 @@ def create(annotation: str, image: str, output_path: str, split: str):
 
     for i, (article_texts, line_segments) in enumerate(zip(texts, segments)):
         for j, (text, segment) in enumerate(zip(article_texts, line_segments)):
+
+            # check for to small segments
+            minx, miny, maxx, maxy = segment
+            if maxy - miny < 5 or maxx - minx < 5:
+                continue
+
             file_name = f"{basename(annotation)[:-4]}_seg{i}_line{j}"
 
             # save crop
