@@ -4,6 +4,7 @@ import os
 from os.path import basename
 from typing import List, Tuple
 
+from PIL import Image
 from bs4 import BeautifulSoup
 from shapely.geometry import Polygon
 from skimage.io import imread, imsave
@@ -78,7 +79,12 @@ def save_target(path: str, split: str, text: str, file_name: str):
 def save_crop(image, bbox, path):
     minx, miny, maxx, maxy = bbox
     crop = image[int(miny):int(maxy), int(minx):int(maxx)]
-    imsave(path, crop)
+    image_pil = Image.fromarray(crop)
+
+    aspect_ratio = image_pil.width / image_pil.height
+    resized_crop = image_pil.resize((int(128 * aspect_ratio), 128), Image.Resampling.LANCZOS)
+
+    resized_crop.save(path)
 
 
 def create(annotation: str, image: str, output_path: str, split: str):
