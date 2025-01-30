@@ -2,6 +2,7 @@ DATA_PATH=$1
 FTP_ARGS=$2
 IMAGES_PER_ITERATION=$3
 AVAILABLE_TIME=$4
+NAME=$5
 
 MAX_TIME=0
 INIT=$(date +%s)
@@ -19,7 +20,7 @@ do
 
   bash script/pipeline.sh "${DATA_PATH}/images/"
 
-  bash script/large_data_pipeline/organize_results.sh $DATA_PATH
+  bash script/large_data_pipeline/organize_results.sh $DATA_PATH $NAME
 
   END=$(date +%s)
   DIFF=$(( END - START ))
