@@ -3,11 +3,15 @@ FTP_ARGS=$2
 IMAGES_PER_ITERATION=$3
 AVAILABLE_TIME=$4
 NAME=$5
+ENV_NAME=${5:-'pipeline'}
 
 MAX_TIME=0
 INIT=$(date +%s)
 
 ITERATION_NUMBER=0
+
+eval "$(conda shell.bash hook)"
+conda activate $ENV_NAME
 
 while :
 do
@@ -18,7 +22,7 @@ do
 
   bash script/large_data_pipeline/organize_data.sh $DATA_PATH
 
-  bash script/pipeline.sh "${DATA_PATH}/images/"
+  bash script/pipeline.sh "${DATA_PATH}/images/" $ENV_NAME
 
   bash script/large_data_pipeline/organize_results.sh $DATA_PATH $NAME
 
