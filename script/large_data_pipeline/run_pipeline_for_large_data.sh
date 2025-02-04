@@ -22,6 +22,12 @@ do
 
   bash script/large_data_pipeline/organize_data.sh $DATA_PATH
 
+  IMG_FILE_NUM=$(ls -1 "${DATA_PATH}/images/*.jpg" 2>/dev/null | wc -l)
+  if ((IMG_FILE_NUM < 1)); then
+    echo "No .jpg images found, assuming task is done."
+    exit 0
+  fi
+
   bash script/pipeline.sh "${DATA_PATH}/images/" $ENV_NAME
 
   bash script/large_data_pipeline/organize_results.sh $DATA_PATH $NAME
