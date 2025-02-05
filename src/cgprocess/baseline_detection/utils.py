@@ -393,6 +393,6 @@ def create_path_queue(image_paths: List[str], layout_xml_paths: List[str], outpu
 
 def create_model_list(args: argparse.Namespace, num_gpus: int, num_processes: int) -> list:
     """    Create OCR model list containing one separate model for each process."""
-    device_ids = list(range(num_gpus) if torch.cuda.is_available() else [-1])
+    device_ids = list(range(num_gpus) if torch.cuda.is_available() else [-1]) # todo: fix this for cpu only
     models = [(args.model, device_ids[i % num_gpus], args.thread_count) for i in range(len(device_ids) * num_processes)]
     return models
